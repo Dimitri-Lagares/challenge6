@@ -69,7 +69,8 @@ const buttonCancel = () =>{
 
 const buttonSave = () =>{
    if (VehicleName || VehicleFabricationYear || VehicleValue || Almount === ""){
-     setShowWarningAlert(true)    
+    setShowWarningAlert(true)
+    showWarningAlertTimeOut()
    }else{
 
     axios.post('http://localhost:3055/agregar', {
@@ -84,11 +85,12 @@ const buttonSave = () =>{
       setVehicleValue("")
       setAlmount("")
       setShowSuccessAlert(true)
+      showSuccessAlertTimeOut()
       getData()
     }).catch((error) => {
       console.log(error)
-      alert("ha ocurrido un error, revisa la consola para saber mas")
       setShowWarningAlert2(true)
+      showWarningAlert2TimeOut()
     })
   }
  }
@@ -126,9 +128,34 @@ const buttonUpdate = (() => {
     setVehicleValue("")
     setAlmount("")
     setShowSuccessAlert2(true)
+    showSuccessAlert2TimeOut()
   })
 
 })
+
+const showWarningAlertTimeOut = () => {
+  setTimeout(() => {
+    setShowWarningAlert(false);
+  }, 3000);
+}
+
+const showWarningAlert2TimeOut = () => {
+  setTimeout(() => {
+    setShowWarningAlert2(false);
+  }, 3000);
+}
+
+const showSuccessAlertTimeOut = () => {
+  setTimeout(() => {
+    setShowSuccessAlert(false);
+  }, 3000);
+}
+
+const showSuccessAlert2TimeOut = () => {
+  setTimeout(() => {
+    setShowSuccessAlert2(false);
+  }, 3000);
+}
 
 return (
 <div>
