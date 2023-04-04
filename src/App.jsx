@@ -10,8 +10,7 @@ import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import axios from 'axios';
 import {useState, useEffect} from 'react';
-import { Box} from '@mui/material';
-
+import { Box, Button,Alert, Stack} from '@mui/material';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -34,11 +33,65 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 export default function App() {
-  const [data, setData] = useState([]);
 
-useEffect(()=>{
-  getData()
-},[])
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showSuccessAlert2, setShowSuccessAlert2] = useState(false);
+  const [showWarningAlert, setShowWarningAlert] = useState(false);
+  const [showWarningAlert2, setShowWarningAlert2] = useState(false);
+  const [buttonChanger, setButtonChanger] = useState(true);
+  const [data, setData] = useState([]);
+  const [id, setId] = useState("");
+  const [VehicleName, setVehicleName] = useState("");
+  const [VehicleFabricationYear, setVehicleFabricationYear] = useState("");
+  const [VehicleValue, setVehicleValue] = useState("");
+  const [Almount, setAlmount] = useState("");
+  
+  const onVehicleNameChange = e => setVehicleName(e.target.value)
+  const onVehicleFabricationYearChange = e => setVehicleFabricationYear(e.target.value)
+  const onVehicleValueChange = e => setVehicleValue(e.target.value)
+  const onAlmountChange = e => setAlmount(e.target.value)
+  
+  useEffect(()=>{
+    getData()
+  },[])
+
+const buttonCancel = () =>{
+  setVehicleName("")
+  setVehicleFabricationYear("")
+  setVehicleValue("")
+  setAlmount("")
+  setShowSuccessAlert(false)
+  setShowWarningAlert(false)
+  setShowWarningAlert2(false)
+  setButtonChanger(true)
+  setShowSuccessAlert2(false)
+}
+
+const buttonSave = () =>{
+   if (VehicleName || VehicleFabricationYear || VehicleValue || Almount === ""){
+     setShowWarningAlert(true)    
+   }else{
+
+    axios.post('http://localhost:3055/agregar', {
+      vehicleName:VehicleName,
+      vehicleFabricationYear:VehicleFabricationYear,
+      vehicleValue:VehicleValue,
+      almount:Almount,
+    }).then((response) => {
+      console.log(response)
+      setVehicleName("")
+      setVehicleFabricationYear("")
+      setVehicleValue("")
+      setAlmount("")
+      setShowSuccessAlert(true)
+      getData()
+    }).catch((error) => {
+      console.log(error)
+      alert("ha ocurrido un error, revisa la consola para saber mas")
+      setShowWarningAlert2(true)
+    })
+  }
+ }
 
 const getData = async () => {
   try{
@@ -50,9 +103,40 @@ const getData = async () => {
   }
 }
 
+const showData = ((getTableData) => {
+  setButtonChanger(false)
+  setId(getTableData.id)
+  setVehicleName(getTableData.vehicleName)
+  setVehicleFabricationYear(getTableData.vehicleFabricationYear)
+  setVehicleValue(getTableData.vehicleValue)
+  setAlmount(getTableData.almount)
+})
+
+const buttonUpdate = (() => {
+  axios.put(`http://localhost:3055/actualizar/${id}`, {
+    vehicleName:VehicleName,
+    vehicleFabricationYear:VehicleFabricationYear,
+    vehicleValue:VehicleValue,
+    almount:Almount,
+  }).then(()=>{
+    getData()
+    setId("")
+    setVehicleName("")
+    setVehicleFabricationYear("")
+    setVehicleValue("")
+    setAlmount("")
+    setShowSuccessAlert2(true)
+  })
+
+})
 
 return (
 <div>
+
+  {showWarningAlert&&  <Alert severity="warning">debes de llenar los campos</Alert>}
+  {showWarningAlert2 && <Alert severity="warning">ha ocurrido un error, revisa la consola para saber mas</Alert>}
+  {showSuccessAlert && <Alert severity="success">Añadido correctamente</Alert>}
+  {showSuccessAlert2 && <Alert severity="success">Actualizado correctamente</Alert>}
 
 <Box
       component="form"
@@ -62,12 +146,14 @@ return (
       noValidate
       autoComplete="off"
     >
-
-      <TextField id="outlined-basic" label="Nombre del vehículo" variant="outlined" />
-      <TextField id="outlined-basic" label="Año de fabricacion del vehiculo" variant="outlined" />
-      <TextField id="outlined-basic" label="valor del vehículo" variant="outlined" />
-      <TextField id="outlined-basic" label="cantidad" variant="outlined" />
-
+      <TextField id="outlined-basic" label="Nombre del vehículo" variant="outlined" value={VehicleName} onChange={onVehicleNameChange}/>
+      <TextField id="outlined-basic" label="Año de fabricacion del vehiculo(numeros)" variant="outlined" value={VehicleFabricationYear} onChange={onVehicleFabricationYearChange} type='number'/>
+      <TextField id="outlined-basic" label="valor del vehículo(numeros)" variant="outlined" value={VehicleValue} onChange={onVehicleValueChange} type='number'/>
+      <TextField id="outlined-basic" label="cantidad(numeros)" variant="outlined" value={Almount} onChange={onAlmountChange} type='number'/>
+      
+      {buttonChanger && <Button onClick={buttonSave} variant='outlined' color='secondary'>agregar</Button>}
+      {!buttonChanger && <Button onClick={buttonUpdate} variant='outlined' color='secondary'>actualizar</Button>}
+      <Button onClick={buttonCancel} variant='outlined' color='error'>cancelar</Button>
     </Box>
 
     <TableContainer component={Paper}>
@@ -84,14 +170,14 @@ return (
         </TableHead>
         <TableBody>
           {data.map((row) => (
-            <StyledTableRow key={row.name}>
+            <StyledTableRow key={row.name} onClick={() => {showData(row)}}>
               <StyledTableCell component="th" scope="row">
                 {row.id}
               </StyledTableCell>
               <StyledTableCell align="right">{row.vehicleName}</StyledTableCell>
-              <StyledTableCell align="right">{row.fabricationYear}</StyledTableCell>
+              <StyledTableCell align="right">{row.vehicleFabricationYear}</StyledTableCell>
               <StyledTableCell align="right">{row.vehicleValue}</StyledTableCell>
-              <StyledTableCell align="right">{row.cantidad}</StyledTableCell>
+              <StyledTableCell align="right">{row.almount}</StyledTableCell>
             </StyledTableRow>
           ))}
         </TableBody>
